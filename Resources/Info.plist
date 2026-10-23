@@ -1,0 +1,33 @@
+{
+  "CFBundleDevelopmentRegion" : "zh-Hans",
+  "CFBundleDisplayName" : "Code",
+  "CFBundleExecutable" : "$(EXECUTABLE_NAME)",
+  "CFBundleIdentifier" : "$(PRODUCT_BUNDLE_IDENTIFIER)",
+  "CFBundleInfoDictionaryVersion" : "6.0",
+  "CFBundleName" : "$(PRODUCT_NAME)",
+  "CFBundlePackageType" : "APPL",
+  "CFBundleShortVersionString" : "1.0.0",
+  "CFBundleVersion" : "20261024.01",
+  "LSRequiresIPhoneOS" : true,
+  "UILaunchScreen" : {
+    "UIColorName" : "LaunchBackground",
+    "FullScreen" : true
+  },
+  "UISupportedInterfaceOrientations" : [
+    "UIInterfaceOrientationPortrait",
+    "UIInterfaceOrientationLandscapeLeft",
+    "UIInterfaceOrientationLandscapeRight"
+  ],
+  "UISupportedInterfaceOrientations~ipad" : [
+    "UIInterfaceOrientationPortrait",
+    "UIInterfaceOrientationPortraitUpsideDown",
+    "UIInterfaceOrientationLandscapeLeft",
+    "UIInterfaceOrientationLandscapeRight"
+  ],
+  "NSCameraUsageDescription" : "需要访问相机以扫描二维码",
+  "NSPhotoLibraryUsageDescription" : "需要访问相册以导入项目",
+  "NSLocalNetworkUsageDescription" : "需要访问本地网络以连接云端服务",
+  "UIApplicationSceneManifest" : {
+    "UISceneConfigurations" : {}
+  }
+}

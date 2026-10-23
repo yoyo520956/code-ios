@@ -1,0 +1,64 @@
+// XcodeGen project.yml for Code iOS App
+# 项目名称：Code
+# 描述：iPhone 原生云端开发工作站
+
+name: Code
+options:
+  bundleIdPrefix: com.code
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  BASE_URL: "https://api.code.dev"
+  AI_API_KEY: "$$CODE_AI_API_KEY"
+
+targets:
+  Code:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Sources
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.code.app
+        SWIFT_VERSION: 5.9
+        INFOPLIST_FILE: Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "20261024.01"
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
+        ENABLE_PREVIEWS: YES
+    dependencies:
+      - package: CodeEditSourceEditor
+        module_name: CodeEditSourceEditor
+    preBuildScripts:
+      - name: "Generate SwiftGen"
+        script: |
+          echo "Preparing resources..."
+        executionScope: empty
+    entitlements:
+      path: Resources/Code.entitlements
+      name: Code.entitlements
+
+  CodeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Tests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.code.tests
+        SWIFT_VERSION: 5.9
+    dependencies:
+      - target: Code
+
+packages:
+  CodeEditSourceEditor:
+    url: https://github.com/CodeEditApp/CodeEditSourceEditor.git
+    version: 0.12.1

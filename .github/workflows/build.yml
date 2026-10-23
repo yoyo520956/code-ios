@@ -1,0 +1,94 @@
+# GitHub Actions Build Workflow for Code iOS App
+
+name: Build iOS App
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  APP_NAME: Code
+  SCHEME: Code
+  PLATFORM: generic/platform=iOS
+
+jobs:
+  build:
+    runs-on: macos-15
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Install XcodeGen
+      run: brew install xcodegen
+      
+    - name: Generate Xcode Project
+      run: |
+        cd poc-editor
+        xcodegen generate
+        
+    - name: Build
+      run: |
+        cd poc-editor
+        xcodebuild build \
+          -project Code.xcodeproj \
+          -scheme ${{ env.SCHEME }} \
+          -configuration Debug \
+          -destination '${{ env.PLATFORM }}' \
+          CODE_SIGNING_ALLOWED=NO \
+          2>&1 | tee build.log
+          
+    - name: Check Build Result
+      run: |
+        if grep -q "BUILD SUCCEEDED" build.log; then
+          echo "Build succeeded!"
+        else
+          echo "Build failed!"
+          tail -50 build.log
+          exit 1
+        fi
+        
+    - name: Archive
+      run: |
+        cd poc-editor
+        xcodebuild archive \
+          -project Code.xcodeproj \
+          -scheme ${{ env.SCHEME }} \
+          -configuration Release \
+          -destination '${{ env.PLATFORM }}' \
+          -archivePath build/Code.xcarchive \
+          CODE_SIGNING_ALLOWED=NO
+          
+    - name: Export IPA
+      run: |
+        cd poc-editor
+        mkdir -p build/ipa
+        # Create Payload directory
+        cp -R build/Code.xcarchive/Products/Applications/*.app build/ipa/Payload/
+        # Create IPA
+        cd build/ipa
+        zip -qry Code-unsigned.ipa Payload/
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Code-unsigned.ipa
+        path: poc-editor/build/ipa/Code-unsigned.ipa
+        retention-days: 7
+        
+    - name: Create Release
+      if: github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: poc-editor/build/ipa/Code-unsigned.ipa
+        tag_name: v${{ github.run_number }}
+        name: Code v${{ github.run_number }}
+        draft: false
+        prerelease: false
