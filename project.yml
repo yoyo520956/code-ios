@@ -19,10 +19,7 @@ targets:
     platform: iOS
     deploymentTarget: "17.0"
     sources:
-      - path: Sources
-        excludes:
-          - "**/AIAssistantConfig.swift"  # 由 App target 单独引用？
-    # 直接引用全部 Sources（App 模式，包含 @main 入口）
+      - Sources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.code.app
