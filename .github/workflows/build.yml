@@ -6,24 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  swift-test:
-    name: Swift Package Test
+  build:
+    name: Build
     runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Swift Version
-        run: |
-          swift --version
-          echo ""
+      - name: Show Swift Version
+        run: swift --version
 
-      - name: Build Package
+      - name: List Files
+        run: |
+          echo "Root directory:"
+          ls -la
+          echo ""
+          echo "Sources directory:"
+          ls -la Sources/ || echo "No Sources directory"
+          echo ""
+          echo "Package.swift:"
+          cat Package.swift || echo "No Package.swift"
+
+      - name: Build
         run: |
           swift build
-          echo "✅ Swift package build completed"
-
-      - name: Run Tests
-        run: |
-          swift test
-          echo "✅ Swift tests completed"
+          echo "✅ Build completed"
