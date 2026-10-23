@@ -24,7 +24,7 @@ jobs:
       - name: Generate Xcode Project
         run: |
           xcodegen generate
-          ls -la Code.xcodeproj || ls -la *.xcodeproj
+          ls -la *.xcodeproj
 
       - name: Build Archive
         run: |
@@ -37,19 +37,27 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tail -50
+            2>&1 | tail -30
 
       - name: Export IPA (Unsigned)
         run: |
-          echo "=== 查找 .app ==="
-          find build -name "*.app" -type d
+          echo "=== xcarchive 结构 ==="
+          find build/Code.xcarchive -maxdepth 4 -type d | head -20
           
-          APP_PATH=$(find build -name "*.app" -type d | grep "iphoneos" | head -1)
-          if [ -z "$APP_PATH" ]; then
+          # 按 GLOBAL 铁律：.app 在 Products/Applications/
+          APP_PATH="build/Code.xcarchive/Products/Applications/Code.app"
+          
+          if [ ! -d "$APP_PATH" ]; then
+            echo "⚠️ 未找到预期路径，搜索所有 .app"
             APP_PATH=$(find build -name "*.app" -type d | head -1)
           fi
           
           echo "App path: $APP_PATH"
+          
+          if [ ! -d "$APP_PATH" ]; then
+            echo "❌ 无法找到 .app"
+            exit 1
+          fi
           
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
