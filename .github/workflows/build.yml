@@ -6,17 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  swift-test:
+    name: Swift Package Test
     runs-on: macos-14
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Test
-      run: |
-        echo "Hello from GitHub Actions!"
-        swift --version
-        ls -la
-        echo "Files in Sources:"
-        ls -la Sources/
-        echo "Package.swift content:"
-        cat Package.swift
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Swift Version
+        run: |
+          swift --version
+          echo ""
+
+      - name: Build Package
+        run: |
+          swift build
+          echo "✅ Swift package build completed"
+
+      - name: Run Tests
+        run: |
+          swift test
+          echo "✅ Swift tests completed"

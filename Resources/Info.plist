@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>CFBundleDevelopmentRegion</key>
+\t<string>zh_CN</string>
+\t<key>CFBundleDisplayName</key>
+\t<string>Code</string>
+\t<key>CFBundleExecutable</key>
+\t<string>$(EXECUTABLE_NAME)</string>
+\t<key>CFBundleIdentifier</key>
+\t<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+\t<key>CFBundleInfoDictionaryVersion</key>
+\t<string>6.0</string>
+\t<key>CFBundleName</key>
+\t<string>$(PRODUCT_NAME)</string>
+\t<key>CFBundlePackageType</key>
+\t<string>APPL</string>
+\t<key>CFBundleShortVersionString</key>
+\t<string>1.0.0</string>
+\t<key>CFBundleVersion</key>
+\t<string>20261024.01</string>
+\t<key>LSRequiresIPhoneOS</key>
+\t<true/>
+\t<key>UILaunchScreen</key>
+\t<dict/>
+\t<key>UIRequiredDeviceCapabilities</key>
+\t<array>
+\t\t<string>arm64</string>
+\t</array>
+\t<key>UISupportedInterfaceOrientations</key>
+\t<array>
+\t\t<string>UIInterfaceOrientationPortrait</string>
+\t\t<string>UIInterfaceOrientationLandscapeLeft</string>
+\t\t<string>UIInterfaceOrientationLandscapeRight</string>
+\t</array>
+\t<key>UISupportedInterfaceOrientations~ipad</key>
+\t<array>
+\t\t<string>UIInterfaceOrientationPortrait</string>
+\t\t<string>UIInterfaceOrientationPortraitUpsideDown</string>
+\t\t<string>UIInterfaceOrientationLandscapeLeft</string>
+\t\t<string>UIInterfaceOrientationLandscapeRight</string>
+\t</array>
+</dict>
+</plist>
