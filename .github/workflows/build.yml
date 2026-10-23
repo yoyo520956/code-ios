@@ -1,84 +1,72 @@
-# GitHub Actions Build Workflow for Code iOS App
-
-name: Build iOS App
+name: Build
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-
-env:
-  APP_NAME: Code
-  SCHEME: Code
-  PLATFORM: generic/platform=iOS
-
 jobs:
   build:
-    runs-on: macos-15
-    
+    runs-on: macos-14
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      
+    - uses: actions/checkout@v4
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '16.0'
+    
     - name: Install XcodeGen
       run: brew install xcodegen
-      
+    
     - name: Generate Xcode Project
       run: |
-        cd poc-editor
+        echo "=== Generating Xcode Project ==="
         xcodegen generate
-        
+        echo "✅ Project generated successfully"
+        ls -la *.xcodeproj
+    
     - name: Build
       run: |
-        cd poc-editor
+        echo "=== Building Project ==="
         xcodebuild build \
           -project Code.xcodeproj \
-          -scheme ${{ env.SCHEME }} \
+          -scheme Code \
           -configuration Debug \
-          -destination '${{ env.PLATFORM }}' \
+          -destination 'generic/platform=iOS' \
           CODE_SIGNING_ALLOWED=NO \
           2>&1 | tee build.log
-          
-    - name: Check Build Result
-      run: |
+        
         if grep -q "BUILD SUCCEEDED" build.log; then
-          echo "Build succeeded!"
+          echo "✅ Build succeeded!"
         else
-          echo "Build failed!"
+          echo "❌ Build failed!"
           tail -50 build.log
           exit 1
         fi
-        
-    - name: Archive
-      run: |
-        cd poc-editor
-        xcodebuild archive \
-          -project Code.xcodeproj \
-          -scheme ${{ env.SCHEME }} \
-          -configuration Release \
-          -destination '${{ env.PLATFORM }}' \
-          -archivePath build/Code.xcarchive \
-          CODE_SIGNING_ALLOWED=NO
-          
+    
     - name: Export IPA
+      if: success()
       run: |
-        cd poc-editor
-        mkdir -p build/ipa
-        # Create Payload directory
-        cp -R build/Code.xcarchive/Products/Applications/*.app build/ipa/Payload/
-        # Create IPA
-        cd build/ipa
-        zip -qry Code-unsigned.ipa Payload/
+        echo "=== Exporting IPA ==="
+        # 查找 .app 文件
+        APP_PATH=$(find DerivedData -name "*.app" 2>/dev/null | head -1)
+        echo "Found app: $APP_PATH"
         
-    - name: Upload Artifact
+        # 创建 Payload 目录
+        mkdir -p Payload
+        cp -R "$APP_PATH" Payload/
+        
+        # 打包 IPA
+        cd Payload
+        zip -qr ../Code-unsigned.ipa .
+        cd ..
+        
+        echo "✅ IPA created: $(ls -lh Code-unsigned.ipa)"
+    
+    - name: Upload IPA
+      if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: Code-unsigned.ipa
-        path: poc-editor/build/ipa/Code-unsigned.ipa
-        retention-days: 7
+        name: Code-unsigned
+        path: Code-unsigned.ipa
