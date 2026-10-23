@@ -15,19 +15,9 @@ struct ContentView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            Divider()
-                .margin(.vertical)
-            
-            Text("项目正在初始化...")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
             Spacer()
         }
         .padding()
-        .onAppear {
-            print("Code iOS app started!")
-        }
     }
 }
 
