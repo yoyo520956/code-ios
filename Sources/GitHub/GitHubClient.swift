@@ -176,4 +176,149 @@ public final class GitHubClient {
         let decoded = try JSONDecoder().decode([String: [Artifact]].self, from: data)
         return decoded["artifacts"] ?? []
     }
+
+    // MARK: - Commits（Git 历史 + 提交）
+    
+    public struct CommitInfo: Codable {
+        public let sha: String
+        public let commit: CommitDetail
+    }
+    
+    public struct CommitDetail: Codable {
+        public let message: String
+        public let author: CommitAuthor
+    }
+    
+    public struct CommitAuthor: Codable {
+        public let name: String
+        public let date: Date
+    }
+    
+    public func fetchCommits(owner: String, repo: String, branch: String) async throws -> [CommitInfo] {
+        let request = try makeRequest("/repos/\(owner)/\(repo)/commits?sha=\(branch)&per_page=20")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw GitHubError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0, "提交历史查询失败")
+        }
+        
+        return try JSONDecoder().decode([CommitInfo].self, from: data)
+    }
+    
+    // Data API 提交：blob → tree → commit → PATCH ref
+    public func commitFiles(owner: String, repo: String, branch: String, message: String, files: [(path: String, content: String)]) async throws -> String {
+        // 1. 获取当前 ref
+        let refRequest = try makeRequest("/repos/\(owner)/\(repo)/git/ref/heads/\(branch)")
+        let (refData, _) = try await URLSession.shared.data(for: refRequest)
+        let ref = try JSONDecoder().decode([String: [String: Any]].self, from: refData)
+        
+        // 简化处理：直接用 URL 构造
+        guard let refURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/ref/heads/\(branch)") else {
+            throw GitHubError.invalidURL
+        }
+        var req = URLRequest(url: refURL)
+        req.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let (refBytes, _) = try await URLSession.shared.data(for: req)
+        guard let refJSON = try? JSONSerialization.jsonObject(with: refBytes) as? [String: Any],
+              let obj = refJSON["object"] as? [String: Any],
+              let baseCommitSha = obj["sha"] as? String else {
+            throw GitHubError.decodeError("ref 解析失败")
+        }
+        
+        // 2. 获取 base tree
+        guard let commitURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/commits/\(baseCommitSha)") else {
+            throw GitHubError.invalidURL
+        }
+        var req2 = URLRequest(url: commitURL)
+        req2.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        req2.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let (commitBytes, _) = try await URLSession.shared.data(for: req2)
+        guard let commitJSON = try? JSONSerialization.jsonObject(with: commitBytes) as? [String: Any],
+              let baseTreeSha = commitJSON["tree"] as? [String: Any],
+              let treeSha = commitJSON["sha"] as? String else {
+            throw GitHubError.decodeError("commit 解析失败")
+        }
+        _ = treeSha
+        
+        // 3. 创建 blobs
+        var treeEntries: [[String: Any]] = []
+        for file in files {
+            guard let blobURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/blobs") else {
+                throw GitHubError.invalidURL
+            }
+            var blobReq = URLRequest(url: blobURL)
+            blobReq.httpMethod = "POST"
+            blobReq.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+            blobReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            blobReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            let blobBody: [String: Any] = ["content": file.content, "encoding": "utf-8"]
+            blobReq.httpBody = try JSONSerialization.data(withJSONObject: blobBody)
+            let (blobBytes, _) = try await URLSession.shared.data(for: blobReq)
+            guard let blobJSON = try? JSONSerialization.jsonObject(with: blobBytes) as? [String: Any],
+                  let blobSha = blobJSON["sha"] as? String else {
+                throw GitHubError.decodeError("blob 失败")
+            }
+            
+            treeEntries.append([
+                "path": file.path,
+                "mode": "100644",
+                "type": "blob",
+                "sha": blobSha
+            ])
+        }
+        
+        // 4. 创建 tree
+        guard let treeURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/trees") else {
+            throw GitHubError.invalidURL
+        }
+        var treeReq = URLRequest(url: treeURL)
+        treeReq.httpMethod = "POST"
+        treeReq.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        treeReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        treeReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let treeBody: [String: Any] = ["base_tree": baseTreeSha, "tree": treeEntries]
+        treeReq.httpBody = try JSONSerialization.data(withJSONObject: treeBody)
+        let (treeBytes, _) = try await URLSession.shared.data(for: treeReq)
+        guard let treeJSON = try? JSONSerialization.jsonObject(with: treeBytes) as? [String: Any],
+              let newTreeSha = treeJSON["sha"] as? String else {
+            throw GitHubError.decodeError("tree 失败")
+        }
+        
+        // 5. 创建 commit
+        guard let newCommitURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/commits") else {
+            throw GitHubError.invalidURL
+        }
+        var newCommitReq = URLRequest(url: newCommitURL)
+        newCommitReq.httpMethod = "POST"
+        newCommitReq.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        newCommitReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        newCommitReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let newCommitBody: [String: Any] = ["message": message, "tree": newTreeSha, "parents": [baseCommitSha]]
+        newCommitReq.httpBody = try JSONSerialization.data(withJSONObject: newCommitBody)
+        let (newCommitBytes, _) = try await URLSession.shared.data(for: newCommitReq)
+        guard let newCommitJSON = try? JSONSerialization.jsonObject(with: newCommitBytes) as? [String: Any],
+              let newCommitSha = newCommitJSON["sha"] as? String else {
+            throw GitHubError.decodeError("commit 失败")
+        }
+        
+        // 6. PATCH ref
+        guard let patchURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/refs/heads/\(branch)") else {
+            throw GitHubError.invalidURL
+        }
+        var patchReq = URLRequest(url: patchURL)
+        patchReq.httpMethod = "PATCH"
+        patchReq.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        patchReq.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        patchReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let patchBody: [String: Any] = ["sha": newCommitSha, "force": false]
+        patchReq.httpBody = try JSONSerialization.data(withJSONObject: patchBody)
+        let (_, patchResponse) = try await URLSession.shared.data(for: patchReq)
+        
+        guard let patchHTTP = patchResponse as? HTTPURLResponse, patchHTTP.statusCode == 200 else {
+            throw GitHubError.httpError((patchResponse as? HTTPURLResponse)?.statusCode ?? 0, "ref 更新失败")
+        }
+        
+        return newCommitSha
+    }
 }
