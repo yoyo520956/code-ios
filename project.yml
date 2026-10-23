@@ -1,6 +1,5 @@
-// XcodeGen project.yml for Code iOS App
-# 项目名称：Code
-# 描述：iPhone 原生云端开发工作站
+# XcodeGen project.yml for Code iOS App
+# iPhone 原生云端开发工作站
 
 name: Code
 options:
@@ -33,14 +32,7 @@ targets:
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGN_IDENTITY: ""
         ENABLE_PREVIEWS: YES
-    dependencies:
-      - package: CodeEditSourceEditor
-        module_name: CodeEditSourceEditor
-    preBuildScripts:
-      - name: "Generate SwiftGen"
-        script: |
-          echo "Preparing resources..."
-        executionScope: empty
+        ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
     entitlements:
       path: Resources/Code.entitlements
       name: Code.entitlements
@@ -57,8 +49,3 @@ targets:
         SWIFT_VERSION: 5.9
     dependencies:
       - target: Code
-
-packages:
-  CodeEditSourceEditor:
-    url: https://github.com/CodeEditApp/CodeEditSourceEditor.git
-    version: 0.12.1

@@ -82,13 +82,3 @@ jobs:
         name: Code-unsigned.ipa
         path: poc-editor/build/ipa/Code-unsigned.ipa
         retention-days: 7
-        
-    - name: Create Release
-      if: github.event_name == 'workflow_dispatch'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: poc-editor/build/ipa/Code-unsigned.ipa
-        tag_name: v${{ github.run_number }}
-        name: Code v${{ github.run_number }}
-        draft: false
-        prerelease: false
