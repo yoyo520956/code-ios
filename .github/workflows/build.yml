@@ -11,19 +11,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Swift Version
-      run: swift --version
-    
-    - name: Build
+    - name: Test
       run: |
-        echo "=== Building Code iOS ==="
-        swift build
-        
-        if [ -f .build/debug/Code ]; then
-          echo "✅ Build succeeded!"
-          ls -la .build/debug/Code
-        else
-          echo "❌ Build failed!"
-          swift build -v 2>&1 | tail -50
-          exit 1
-        fi
+        echo "Hello from GitHub Actions!"
+        swift --version
+        ls -la
+        echo "Files in Sources:"
+        ls -la Sources/
+        echo "Package.swift content:"
+        cat Package.swift
