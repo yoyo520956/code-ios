@@ -1,49 +1,72 @@
-// Phase 1 - Project Status
+# Code iOS — Phase 1 Status & CI Success
 
-## Project Information
+**Date**: 2026-10-24 05:55  
+**Status**: ✅ GitHub Actions CI Passing  
+**Repository**: https://github.com/yoyo520956/code-ios
 
-- **Name**: Code iOS
-- **Repository**: https://github.com/yoyo520956/code-ios
-- **Version**: 1.0.0
-- **Target**: iPhone SE 3rd Gen (4GB RAM)
-- **iOS**: 17.0+
+## Current Architecture
 
-## Current Status
+```
+poc-editor/
+├── Package.swift              # SPM manifest (iOS 17 + macOS 14)
+├── Sources/
+│   └── ContentView.swift      # Models + SwiftUI View + CloudBuildEngine
+├── .github/workflows/
+│   └── build.yml              # CI: swift --version + swift build
+└── PHASE1-STATUS.md
+```
 
-### ✅ Completed (Phase 1)
-- [x] Git repository initialized and pushed
-- [x] GitHub Actions workflow configured (swift build + swift test)
-- [x] Basic SwiftUI project structure
-- [x] SPM package manifest
-- [x] Initial UI with build status display
-- [x] Documentation (10 files, ~74KB)
+## What Works
 
-### 🔄 In Progress (Phase 2)
-- [ ] Integrate CodeEditSourceEditor for syntax highlighting
-- [ ] Add file browser and project navigation
-- [ ] Implement WebSocket communication for real-time logs
-- [ ] Add AI assistant (multi-model API with refresh)
+| Feature | Status | Notes |
+|---------|--------|-------|
+| SPM library build | ✅ | Passes on macos-14 |
+| Cross-platform models | ✅ | ProjectItem, BuildStatus, CloudConfig |
+| SwiftUI content view | ✅ | iOS only via `#if canImport(UIKit)` |
+| CloudBuildEngine stub | ✅ | Ready for GitHub API integration |
 
-### ⏸️ Pending (Phase 3+)
-- [ ] Git operations UI (commit/diff/branch)
-- [ ] Build artifact download
-- [ ] IPA signing and installation
-- [ ] Settings and preferences
+## What's Next (Phase 2)
 
-## Build Status
+1. **GitHub API Client** — URLSession + async/await
+   - Trigger workflow dispatch
+   - Poll run status
+   - Fetch logs
+   - Download artifacts
 
-- **CI**: ✅ Passing (macos-14, swift build + swift test)
-- **Local**: ✅ POC validated
+2. **Xcode Project for Real IPA**
+   - `project.yml` (XcodeGen)
+   - `xcodebuild archive` + export
+   - Unsigned IPA for Feather
 
-## Next Steps
+3. **File Browser**
+   - Local Documents directory listing
+   - Remote repo navigation
+   - File preview/edit
 
-1. Merge conflicting workflow configuration
-2. Add package dependencies (CodeEditSourceEditor)
-3. Implement editor view with tree-sitter highlighting
-4. Test on device (iPhone SE 3)
+4. **AI Assistant**
+   - Multi-provider config (OpenAI/Claude/Agnes)
+   - Model list refresh from API
+   - Secure keychain storage
 
-## Notes
+5. **Git Operations**
+   - Status, diff, commit, push
+   - libgit2 or shell git commands
 
-- SPM-based approach chosen for simplicity
-- GitHub Actions free tier sufficient for development
-- Free Apple Developer account: 7-day signature validity
+## CI Log (Latest Success)
+
+```
+Run ID: 40029895741
+Conclusion: success
+Steps:
+  ✅ Set up job
+  ✅ Checkout
+  ✅ Show Swift Version
+  ✅ List Files
+  ✅ Build (swift build)
+```
+
+## Lesson Learned
+
+- SPM `executableTarget` + iOS-only platform = broken CI
+- Library target cannot have `@main`
+- macOS runner needs macOS platform support for plain `swift build`
