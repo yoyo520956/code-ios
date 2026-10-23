@@ -47,7 +47,7 @@ public struct Artifact: Codable, Identifiable {
 public enum GitHubError: Error, LocalizedError {
     case invalidURL
     case httpError(Int, String)
-    case decodeError(Error)
+    case decodeError(String)
     case unauthorized
     case rateLimited
     
@@ -57,8 +57,8 @@ public enum GitHubError: Error, LocalizedError {
             return "无效的 URL"
         case .httpError(let code, let msg):
             return "HTTP \(code): \(msg)"
-        case .decodeError(let err):
-            return "解析失败: \(err.localizedDescription)"
+        case .decodeError(let msg):
+            return "解析失败: \(msg)"
         case .unauthorized:
             return "未授权：请检查 GitHub Token"
         case .rateLimited:
@@ -208,10 +208,6 @@ public final class GitHubClient {
     // Data API 提交：blob → tree → commit → PATCH ref
     public func commitFiles(owner: String, repo: String, branch: String, message: String, files: [(path: String, content: String)]) async throws -> String {
         // 1. 获取当前 ref
-        let refRequest = try makeRequest("/repos/\(owner)/\(repo)/git/ref/heads/\(branch)")
-        let (refData, _) = try await URLSession.shared.data(for: refRequest)
-        let ref = try JSONDecoder().decode([String: [String: Any]].self, from: refData)
-        
         // 简化处理：直接用 URL 构造
         guard let refURL = URL(string: "\(baseURL)/repos/\(owner)/\(repo)/git/ref/heads/\(branch)") else {
             throw GitHubError.invalidURL
