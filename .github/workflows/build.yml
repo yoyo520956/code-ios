@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Swift Version
+      run: swift --version
+    
+    - name: Build
+      run: |
+        echo "=== Building Code iOS ==="
+        swift build
+        
+        if [ -f .build/debug/Code ]; then
+          echo "✅ Build succeeded!"
+          ls -la .build/debug/Code
+        else
+          echo "❌ Build failed!"
+          swift build -v 2>&1 | tail -50
+          exit 1
+        fi
