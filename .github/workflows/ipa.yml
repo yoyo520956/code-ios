@@ -60,9 +60,11 @@ jobs:
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
 
-          cd Payload
-          zip -qry ../Code-unsigned.ipa .
-          cd ..
+          # 关键：不 cd 进 Payload，直接从根目录 zip Payload/，保证 IPA 根目录有 Payload/
+          zip -qry Code-unsigned.ipa Payload
+
+          echo "=== IPA 结构验证 ==="
+          unzip -l Code-unsigned.ipa | head -5
 
           ls -lh Code-unsigned.ipa
           shasum -a 256 Code-unsigned.ipa
