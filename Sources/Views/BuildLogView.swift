@@ -223,14 +223,14 @@ public struct BuildLogView: View {
                             .id("log-bottom")
                     }
                     .background(Color(.systemGray6))
-                    .onChange(of: service.logText) { _ in
+                    .onChange(of: service.logText) {
                         proxy.scrollTo("log-bottom", anchor: .bottom)
                     }
                 }
             }
         }
-        .onChange(of: githubToken) { newValue in
-            service.setToken(newValue)
+        .onChange(of: githubToken) {
+            service.setToken(githubToken)
         }
         .onAppear {
             service.setToken(githubToken)

@@ -22,13 +22,10 @@ jobs:
         run: brew install xcodegen
 
       - name: Generate Xcode Project
-        run: |
-          xcodegen generate
-          ls -la *.xcodeproj
+        run: xcodegen generate
 
-      - name: Build (DerivedData)
+      - name: Build
         run: |
-          set -o pipefail
           xcodebuild build \
             -project Code.xcodeproj \
             -scheme Code \
@@ -38,35 +35,35 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tee build.log | tail -20
+            > build.log 2>&1 || true
 
-          if ! grep -q "BUILD SUCCEEDED" build.log; then
-            echo "❌ Build failed"
-            tail -60 build.log
+          if grep -q "BUILD SUCCEEDED" build.log; then
+            echo "✅ Build succeeded"
+          else
+            echo "❌ Build failed — 错误详情："
+            grep -E "error:" build.log | head -30
+            tail -40 build.log
             exit 1
           fi
-          echo "✅ Build succeeded"
 
       - name: Export IPA (Unsigned)
         run: |
-          echo "=== 查找 .app ==="
-          find build -name "*.app" -type d
-          
           APP_PATH=$(find build/DerivedData/Build/Products -name "*.app" -type d | head -1)
           echo "App path: $APP_PATH"
-          
+
           if [ -z "$APP_PATH" ]; then
             echo "❌ 无法找到 .app"
+            find build -type d | head -30
             exit 1
           fi
-          
+
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
-          
+
           cd Payload
           zip -qry ../Code-unsigned.ipa .
           cd ..
-          
+
           ls -lh Code-unsigned.ipa
           shasum -a 256 Code-unsigned.ipa
 
