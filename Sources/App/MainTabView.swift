@@ -51,55 +51,6 @@ public struct MainTabView: View {
     }
 }
 
-// MARK: - 构建日志（占位 - 后续迭代补齐）
-
-public struct BuildLogView: View {
-    @State private var logText = ""
-    @State private var isBuilding = false
-    
-    public init() {}
-    
-    public var body: some View {
-        VStack(spacing: 0) {
-            // 工具栏
-            HStack {
-                Text("构建日志")
-                    .font(.headline)
-                Spacer()
-                Button(action: {
-                    Task { await triggerBuild() }
-                }) {
-                    Image(systemName: isBuilding ? "hourglass" : "play.fill")
-                        .foregroundColor(isBuilding ? .orange : .blue)
-                }
-                .disabled(isBuilding)
-            }
-            .padding()
-            
-            Divider()
-            
-            // 日志内容
-            ScrollView {
-                Text(logText.isEmpty ? "等待构建..." : logText)
-                    .font(.system(.caption, design: .monospaced))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-            }
-            .background(Color(.systemGray6))
-        }
-    }
-    
-    private func triggerBuild() async {
-        isBuilding = true
-        logText += "[\(Date())] 触发 GitHub Actions 构建...\n"
-        
-        // TODO: 接 GitHubClient
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-        logText += "[\(Date())] 构建完成 ✅\n"
-        isBuilding = false
-    }
-}
-
 // MARK: - 应用设置（占位 - 后续迭代补齐）
 
 public struct AppSettingsView: View {
