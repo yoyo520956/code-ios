@@ -2,11 +2,12 @@ import Foundation
 import Combine
 import SwiftUI
 
+#if canImport(UIKit)
 // MARK: - AI 助手配置界面
 // 主人要求：填密钥和接口 → 点击刷新 → 拉取模型列表 → 选择模型 → 简单易用
 
 public struct AISettingsView: View {
-    @StateObject private var store = AIAssistantStore.shared
+    @ObservedObject private var store = AIAssistantStore.shared
     @State private var newProviderName = ""
     @State private var newProviderURL = ""
     @State private var newProviderKey = ""
@@ -15,8 +16,7 @@ public struct AISettingsView: View {
     public init() {}
     
     public var body: some View {
-        NavigationView {
-            List {
+        List {
                 // 选中模型展示
                 Section(header: Text("当前选中")) {
                     if let provider = store.selectedProvider {
@@ -88,7 +88,6 @@ public struct AISettingsView: View {
                         showAddProvider = false
                     }
                 )
-            }
         }
     }
 }
@@ -196,3 +195,5 @@ struct AddProviderSheet: View {
         }
     }
 }
+
+#endif
