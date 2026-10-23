@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "Code",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v17),
+        .macOS(.v14)
     ],
     products: [
         .library(
@@ -16,10 +17,7 @@ let package = Package(
         .target(
             name: "Code",
             dependencies: [],
-            path: "Sources",
-            exclude: [
-                "main.swift"
-            ]
+            path: "Sources"
         )
     ]
 )
