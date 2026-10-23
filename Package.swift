@@ -17,7 +17,10 @@ let package = Package(
         .target(
             name: "Code",
             dependencies: [],
-            path: "Sources"
+            path: "Sources",
+            exclude: [
+                "App/CodeApp.swift"
+            ]
         )
     ]
 )

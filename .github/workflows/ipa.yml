@@ -1,0 +1,69 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Sources/**'
+      - 'project.yml'
+      - 'Resources/**'
+      - '.github/workflows/ipa.yml'
+  workflow_dispatch:
+
+jobs:
+  ipa:
+    name: Build IPA
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: |
+          xcodegen generate
+          ls -la Code.xcodeproj || ls -la *.xcodeproj
+
+      - name: Build Archive
+        run: |
+          xcodebuild archive \
+            -project Code.xcodeproj \
+            -scheme Code \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Code.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            2>&1 | tail -50
+
+      - name: Export IPA (Unsigned)
+        run: |
+          echo "=== 查找 .app ==="
+          find build -name "*.app" -type d
+          
+          APP_PATH=$(find build -name "*.app" -type d | grep "iphoneos" | head -1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find build -name "*.app" -type d | head -1)
+          fi
+          
+          echo "App path: $APP_PATH"
+          
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          
+          cd Payload
+          zip -qry ../Code-unsigned.ipa .
+          cd ..
+          
+          ls -lh Code-unsigned.ipa
+          shasum -a 256 Code-unsigned.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Code-unsigned-ipa
+          path: Code-unsigned.ipa
+          retention-days: 7
