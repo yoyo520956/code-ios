@@ -51,43 +51,6 @@ public struct MainTabView: View {
     }
 }
 
-// MARK: - 文件浏览器（占位 - 后续迭代补齐）
-
-public struct FileBrowserView: View {
-    @State private var files: [String] = []
-    
-    public init() {}
-    
-    public var body: some View {
-        List {
-            Section(header: Text("项目文件")) {
-                if files.isEmpty {
-                    Text("暂无文件")
-                        .foregroundColor(.secondary)
-                } else {
-                    ForEach(files, id: \.self) { file in
-                        HStack {
-                            Image(systemName: "doc.fill")
-                                .foregroundColor(.blue)
-                            Text(file)
-                        }
-                    }
-                }
-            }
-        }
-        .navigationTitle("文件")
-        .onAppear {
-            // 加载本地项目文件列表
-            loadFiles()
-        }
-    }
-    
-    private func loadFiles() {
-        // TODO: 接 FileManager
-        files = ["ContentView.swift", "GitHubClient.swift", "AIAssistantConfig.swift", "AISettingsView.swift"]
-    }
-}
-
 // MARK: - 构建日志（占位 - 后续迭代补齐）
 
 public struct BuildLogView: View {
