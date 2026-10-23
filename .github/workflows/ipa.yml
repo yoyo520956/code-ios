@@ -26,35 +26,36 @@ jobs:
           xcodegen generate
           ls -la *.xcodeproj
 
-      - name: Build Archive
+      - name: Build (DerivedData)
         run: |
-          xcodebuild archive \
+          set -o pipefail
+          xcodebuild build \
             -project Code.xcodeproj \
             -scheme Code \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath build/Code.xcarchive \
+            -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            2>&1 | tail -30
+            2>&1 | tee build.log | tail -20
+
+          if ! grep -q "BUILD SUCCEEDED" build.log; then
+            echo "❌ Build failed"
+            tail -60 build.log
+            exit 1
+          fi
+          echo "✅ Build succeeded"
 
       - name: Export IPA (Unsigned)
         run: |
-          echo "=== xcarchive 结构 ==="
-          find build/Code.xcarchive -maxdepth 4 -type d | head -20
+          echo "=== 查找 .app ==="
+          find build -name "*.app" -type d
           
-          # 按 GLOBAL 铁律：.app 在 Products/Applications/
-          APP_PATH="build/Code.xcarchive/Products/Applications/Code.app"
-          
-          if [ ! -d "$APP_PATH" ]; then
-            echo "⚠️ 未找到预期路径，搜索所有 .app"
-            APP_PATH=$(find build -name "*.app" -type d | head -1)
-          fi
-          
+          APP_PATH=$(find build/DerivedData/Build/Products -name "*.app" -type d | head -1)
           echo "App path: $APP_PATH"
           
-          if [ ! -d "$APP_PATH" ]; then
+          if [ -z "$APP_PATH" ]; then
             echo "❌ 无法找到 .app"
             exit 1
           fi
