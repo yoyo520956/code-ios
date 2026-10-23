@@ -6,11 +6,20 @@ let package = Package(
     platforms: [
         .iOS(.v17)
     ],
+    products: [
+        .library(
+            name: "Code",
+            targets: ["Code"]
+        ),
+    ],
     targets: [
-        .executableTarget(
+        .target(
             name: "Code",
             dependencies: [],
-            path: "Sources"
+            path: "Sources",
+            exclude: [
+                "main.swift"
+            ]
         )
     ]
 )
