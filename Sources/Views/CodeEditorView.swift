@@ -9,6 +9,7 @@ import SwiftUI
 
 public struct CodeEditorView: View {
     let file: FileItem
+    var key: String = ""
     @State private var content: String = ""
     @State private var isEdited = false
     @State private var showSaveAlert = false

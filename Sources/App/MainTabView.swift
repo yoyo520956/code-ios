@@ -20,6 +20,13 @@ public struct MainTabView: View {
                 }
                 .tag(0)
             
+            EditorTabsView()
+                .tabItem {
+                    Image(systemName: "chevron.left.square")
+                    Text("编辑器")
+                }
+                .tag(1)
+            
             NavigationView {
                 VStack(spacing: 0) {
                     NavigationLink(destination: SearchView()) {
