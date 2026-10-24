@@ -71,9 +71,17 @@ public final class GitService: ObservableObject {
         }
         
         do {
-            let commits = try await client.fetchCommits(owner: owner, repo: repo, branch: currentBranch)
+            let raw = try await client.fetchCommits(owner: owner, repo: repo, branch: currentBranch)
+            let mapped: [GitCommit] = raw.map { info in
+                GitCommit(
+                    id: info.sha,
+                    message: info.commit.message,
+                    author: info.commit.author.name,
+                    date: info.commit.author.date
+                )
+            }
             await MainActor.run {
-                self.commits = commits
+                self.commits = mapped
                 isLoading = false
             }
         } catch {
