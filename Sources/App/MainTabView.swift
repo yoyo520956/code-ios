@@ -34,7 +34,7 @@ public struct MainTabView: View {
                 }
                 .tag(2)
             
-            AISettingsView()
+            AIChatView()
                 .tabItem {
                     Image(systemName: "sparkles")
                     Text("AI")
@@ -60,6 +60,16 @@ public struct AppSettingsView: View {
     
     public var body: some View {
         List {
+            Section(header: Text("AI 助手")) {
+                NavigationLink(destination: AISettingsView()) {
+                    HStack {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.purple)
+                        Text("AI 模型配置")
+                    }
+                }
+            }
+            
             Section(header: Text("性能模式")) {
                 Picker("模式", selection: $appMode) {
                     Text("低性能").tag("low")

@@ -198,4 +198,91 @@ struct OpenAIModelInfo: Codable {
     let id: String
     let ownedBy: String?
     let created: Int?
+
+    // MARK: - AI 聊天（OpenAI 兼容流式）
+    
+    public func sendMessage(
+        _ text: String,
+        history: [ChatMessage],
+        completion: @escaping @Sendable (Result<String, Error>) -> Void
+    ) {
+        guard let provider = selectedProvider,
+              !provider.apiKey.isEmpty,
+              let model = selectedModelId else {
+            completion(.failure(AIProviderError.emptyKey))
+            return
+        }
+        
+        Task {
+            do {
+                guard let url = URL(string: "\(provider.normalizedBaseURL)/chat/completions") else {
+                    throw AIProviderError.invalidURL
+                }
+                
+                var messages: [[String: Any]] = history.map { ["role": $0.role, "content": $0.content] }
+                messages.append(["role": "user", "content": text])
+                
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("Bearer \(provider.apiKey)", forHTTPHeaderField: "Authorization")
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                let body: [String: Any] = [
+                    "model": model,
+                    "messages": messages,
+                    "stream": false
+                ]
+                request.httpBody = try JSONSerialization.data(withJSONObject: body)
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                
+                guard let http = response as? HTTPURLResponse else {
+                    throw AIProviderError.httpError(0)
+                }
+                
+                guard http.statusCode == 200 else {
+                    throw AIProviderError.httpError(http.statusCode)
+                }
+                
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let choices = json["choices"] as? [[String: Any]],
+                      let first = choices.first,
+                      let message = first["message"] as? [String: Any],
+                      let reply = message["content"] as? String else {
+                    throw AIProviderError.decodeError("响应格式异常")
+                }
+                
+                await MainActor.run {
+                    completion(.success(reply))
+                }
+            } catch let error as AIProviderError {
+                await MainActor.run {
+                    completion(.failure(error))
+                }
+            } catch {
+                await MainActor.run {
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 聊天消息模型
+
+public struct ChatMessage: Identifiable, Equatable {
+    public let id: UUID
+    public let role: String     // user / assistant / system
+    public let content: String
+    public let timestamp: Date
+    
+    public init(role: String, content: String) {
+        self.id = UUID()
+        self.role = role
+        self.content = content
+        self.timestamp = Date()
+    }
+    
+    public static func == (lhs: ChatMessage, rhs: ChatMessage) -> Bool {
+        lhs.id == rhs.id
+    }
 }
