@@ -261,6 +261,15 @@ public struct FileBrowserView: View {
         self._currentPath = State(initialValue: currentPath)
     }
     
+    private func swiftFileView(_ file: FileItem) -> some View {
+        let ext = (file.name as NSString).pathExtension
+        if ext == "swift" || ext == "md" || ext == "txt" || ext == "json" || ext == "yml" {
+            return AnyView(CodeEditorView(file: file))
+        } else {
+            return AnyView(FilePreviewView(file: file))
+        }
+    }
+    
     private func relativePath(of file: FileItem) -> String {
         let docPath = fs.documentsURL.path
         let fullPath = file.path
