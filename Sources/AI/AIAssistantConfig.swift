@@ -187,17 +187,6 @@ public final class AIAssistantStore: ObservableObject {
         guard let index = providers.firstIndex(where: { $0.id == providerId }) else { return }
         providers[index].apiKey = key
     }
-}
-
-// MARK: - OpenAI 兼容响应格式
-struct OpenAIModelsResponse: Codable {
-    let data: [OpenAIModelInfo]
-}
-
-struct OpenAIModelInfo: Codable {
-    let id: String
-    let ownedBy: String?
-    let created: Int?
 
     // MARK: - AI 聊天（OpenAI 兼容流式）
     
@@ -266,6 +255,18 @@ struct OpenAIModelInfo: Codable {
         }
     }
 }
+
+// MARK: - OpenAI 兼容响应格式
+struct OpenAIModelsResponse: Codable {
+    let data: [OpenAIModelInfo]
+}
+
+struct OpenAIModelInfo: Codable {
+    let id: String
+    let ownedBy: String?
+    let created: Int?
+}
+
 
 // MARK: - 聊天消息模型
 
