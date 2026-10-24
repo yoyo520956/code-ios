@@ -33,6 +33,7 @@ public struct AIChatView: View {
                 if !messages.isEmpty {
                     Button(action: {
                         messages.removeAll()
+                        store.clearChatHistory()
                     }) {
                         Image(systemName: "trash")
                             .font(.caption)
