@@ -151,6 +151,19 @@ public struct BuildLogView: View {
     public var body: some View {
         VStack(spacing: 0) {
             // 工具栏
+            NavigationLink(destination: ReleaseView()) {
+                HStack {
+                    Image(systemName: "shippingbox")
+                    Text("IPA 下载")
+                        .font(.caption)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.green.opacity(0.15))
+                .foregroundColor(.green)
+                .cornerRadius(8)
+            }
+
             HStack {
                 Text("构建")
                     .font(.headline)
