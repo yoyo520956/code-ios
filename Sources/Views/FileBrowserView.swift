@@ -224,7 +224,7 @@ public struct FileBrowserView: View {
                     ForEach(fs.files) { file in
                         NavigationLink(destination: file.isDirectory ?
                             AnyView(FileBrowserView(currentPath: relativePath(of: file))) :
-                            AnyView(FilePreviewView(file: file))
+                            AnyView(swiftFileView(file))
                         ) {
                             HStack(spacing: 12) {
                                 Image(systemName: file.icon)
