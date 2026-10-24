@@ -84,6 +84,18 @@ public final class AIAssistantStore: ObservableObject {
     @Published public var isRefreshing = false
     @Published public var lastError: String?
     
+    // 聊天历史持久化
+    @Published public var chatHistory: [ChatMessage] = [] {
+        didSet {
+            saveChatHistory()
+        }
+    }
+    
+    private var historyFileURL: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("chat-history.json")
+    }
+    
     private init() {
         // 预置一个默认 provider（对应历史 Agnes 内置）
         let agnes = AIProvider(
@@ -93,6 +105,36 @@ public final class AIAssistantStore: ObservableObject {
         )
         providers.append(agnes)
         selectedProviderId = agnes.id
+        
+        // 加载历史聊天
+        loadChatHistory()
+    }
+    
+    // MARK: - 聊天历史持久化
+    
+    private func saveChatHistory() {
+        // 上限 200 条（内存+磁盘保护）
+        let trimmed = Array(chatHistory.suffix(200))
+        if let data = try? JSONEncoder().encode(trimmed) {
+            try? data.write(to: historyFileURL, options: .atomic)
+        }
+    }
+    
+    private func loadChatHistory() {
+        guard let data = try? Data(contentsOf: historyFileURL),
+              let saved = try? JSONDecoder().decode([ChatMessage].self, from: data) else {
+            return
+        }
+        chatHistory = saved
+    }
+    
+    public func addChatMessage(role: String, content: String) {
+        chatHistory.append(ChatMessage(role: role, content: content))
+    }
+    
+    public func clearChatHistory() {
+        chatHistory = []
+        try? FileManager.default.removeItem(at: historyFileURL)
     }
     
     public var selectedProvider: AIProvider? {
