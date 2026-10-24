@@ -192,21 +192,23 @@ public struct GitView: View {
                         .foregroundColor(.secondary)
                 } else {
                     ForEach(git.commits) { commit in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(commit.message)
-                                .font(.subheadline)
-                                .lineLimit(2)
-                            HStack {
-                                Text(commit.author)
-                                    .font(.caption2)
-                                    .foregroundColor(.blue)
-                                Text(commit.date.formatted(.dateTime.hour().minute()))
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text(String(commit.id.prefix(7)))
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
+                        NavigationLink(destination: DiffView(sha: commit.id, message: commit.message)) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(commit.message)
+                                    .font(.subheadline)
+                                    .lineLimit(2)
+                                HStack {
+                                    Text(commit.author)
+                                        .font(.caption2)
+                                        .foregroundColor(.blue)
+                                    Text(commit.date.formatted(.dateTime.hour().minute()))
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(String(commit.id.prefix(7)))
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
                     }
