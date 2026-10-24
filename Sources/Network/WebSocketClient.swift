@@ -31,7 +31,7 @@ public final class WebSocketClient: NSObject, ObservableObject {
             return
         }
         
-        let port: NWEndpoint.Port = url.port ?? (url.scheme == "wss" ? 443 : 80)
+        let port = NWEndpoint.Port(rawValue: UInt16(url.port ?? (url.scheme == "wss" ? 443 : 80))) ?? NWEndpoint.Port(rawValue: 80)!
         
         let params: NWParameters
         if url.scheme == "wss" {
