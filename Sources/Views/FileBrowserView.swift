@@ -224,6 +224,8 @@ public struct FileBrowserView: View {
     @State private var renameTarget: FileItem? = nil
     @State private var newName = ""
     @State private var showRenameAlert = false
+    @State private var moveTarget: FileItem? = nil
+    @State private var showMoveMenu = false
     
     public init() {}
     
@@ -281,6 +283,12 @@ public struct FileBrowserView: View {
                             }) {
                                 Label("重命名", systemImage: "pencil")
                             }
+                            Button(action: {
+                                moveTarget = file
+                                showMoveMenu = true
+                            }) {
+                                Label("移动到...", systemImage: "folder.badge.plus")
+                            }
                             Button(role: .destructive, action: {
                                 fs.delete(file)
                             }) {
@@ -292,6 +300,21 @@ public struct FileBrowserView: View {
             }
         }
         .navigationTitle("文件")
+        .confirmationDialog("移动到文件夹", isPresented: $showMoveMenu, titleVisibility: .visible) {
+            ForEach(fs.files.filter({ $0.isDirectory }), id: \.id) { dir in
+                Button(dir.name) {
+                    if let target = moveTarget {
+                        _ = fs.move(target, toDirectory: dir.name)
+                    }
+                    moveTarget = nil
+                }
+            }
+            Button("取消", role: .cancel) {
+                moveTarget = nil
+            }
+        } message: {
+            Text("选择目标文件夹")
+        }
         .alert("重命名", isPresented: $showRenameAlert) {
             TextField("新名称", text: $newName)
             Button("确定") {
