@@ -137,7 +137,7 @@ public final class FileSystemService: ObservableObject {
     
     public func move(_ item: FileItem, toDirectory dirName: String) -> Bool {
         let docURL = documentsURL.appendingPathComponent(dirName)
-        let newPath = docURL.appendingPathComponent(item.name)
+        let newPath = docURL.appendingPathComponent(item.name).path
         
         do {
             try fileManager.moveItem(atPath: item.path, toPath: newPath)
