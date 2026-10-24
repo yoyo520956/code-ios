@@ -18,13 +18,42 @@ public final class WebSocketClient: NSObject, ObservableObject {
     private var connection: NWConnection?
     private let queue = DispatchQueue(label: "com.code.websocket")
     
+    // 断线重连
+    private var reconnectAttempts = 0
+    private var shouldReconnect = false
+    private var lastURL: String = ""
+    
     private override init() {
         super.init()
+    }
+    
+    public func enableAutoReconnect() {
+        shouldReconnect = true
+    }
+    
+    public func disableAutoReconnect() {
+        shouldReconnect = false
+        reconnectAttempts = 0
+    }
+    
+    private func scheduleReconnect() {
+        guard shouldReconnect, !lastURL.isEmpty else { return }
+        // 指数退避：1s → 2s → 4s → ... 上限 60s
+        let delay = min(pow(2.0, Double(reconnectAttempts)), 60.0)
+        reconnectAttempts += 1
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self = self, self.shouldReconnect, !self.isConnected else { return }
+            self.lastError = "重连中（第 \(self.reconnectAttempts) 次）..."
+            self.connect(to: self.lastURL)
+        }
     }
     
     // MARK: - 连接
     
     public func connect(to urlString: String) {
+        lastURL = urlString
+        
         guard let url = URL(string: urlString),
               let host = url.host else {
             lastError = "无效的 WebSocket 地址"
@@ -56,9 +85,11 @@ public final class WebSocketClient: NSObject, ObservableObject {
                 case .ready:
                     self?.isConnected = true
                     self?.lastError = nil
+                    self?.reconnectAttempts = 0
                 case .failed(let error):
                     self?.isConnected = false
                     self?.lastError = error.localizedDescription
+                    self?.scheduleReconnect()
                 case .cancelled:
                     self?.isConnected = false
                 default:
@@ -72,6 +103,7 @@ public final class WebSocketClient: NSObject, ObservableObject {
     }
     
     public func disconnect() {
+        shouldReconnect = false
         connection?.cancel()
         connection = nil
         isConnected = false
