@@ -135,11 +135,8 @@ public struct ContentView: View {
     private func triggerBuild() {
         config.buildStatus = .building
         logText += "[\(Date())] 触发 GitHub Actions 构建...\n"
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            config.buildStatus = .success
-            logText += "[\(Date())] 构建完成 ✅\n"
-        }
+        logText += "[\(Date())] 请到构建页查看实时状态\n"
+        config.buildStatus = .success
     }
 }
 

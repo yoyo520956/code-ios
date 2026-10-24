@@ -121,6 +121,28 @@ public struct AIChatView: View {
         .navigationTitle("AI 聊天")
     }
     
+    private func extractCodeBlocks(from text: String) -> [String] {
+        var blocks: [String] = []
+        var inBlock = false
+        var current: [String] = []
+        
+        for line in text.components(separatedBy: "\n") {
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                if inBlock {
+                    blocks.append(current.joined(separator: "\n"))
+                    current = []
+                    inBlock = false
+                } else {
+                    inBlock = true
+                }
+            } else if inBlock {
+                current.append(line)
+            }
+        }
+        
+        return blocks
+    }
+    
     private func send() {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !isSending else { return }
