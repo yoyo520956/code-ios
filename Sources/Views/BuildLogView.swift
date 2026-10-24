@@ -151,6 +151,19 @@ public struct BuildLogView: View {
     public var body: some View {
         VStack(spacing: 0) {
             // 工具栏
+            NavigationLink(destination: BuildStreamView()) {
+                HStack {
+                    Image(systemName: "dot.radiowaves.left.and.right")
+                    Text("实时")
+                        .font(.caption)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.purple.opacity(0.15))
+                .foregroundColor(.purple)
+                .cornerRadius(8)
+            }
+            
             NavigationLink(destination: ReleaseView()) {
                 HStack {
                     Image(systemName: "shippingbox")
