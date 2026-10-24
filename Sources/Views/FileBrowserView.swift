@@ -118,6 +118,37 @@ public final class FileSystemService: ObservableObject {
         }
     }
     
+    // MARK: - 重命名 / 移动
+    
+    public func rename(_ item: FileItem, to newName: String) -> Bool {
+        guard !newName.isEmpty else { return false }
+        let parentDir = (item.path as NSString).deletingLastPathComponent
+        let newPath = (parentDir as NSString).appendingPathComponent(newName)
+        
+        do {
+            try fileManager.moveItem(atPath: item.path, toPath: newPath)
+            listFiles()
+            return true
+        } catch {
+            lastError = "重命名失败：\(error.localizedDescription)"
+            return false
+        }
+    }
+    
+    public func move(_ item: FileItem, toDirectory dirName: String) -> Bool {
+        let docURL = documentsURL.appendingPathComponent(dirName)
+        let newPath = docURL.appendingPathComponent(item.name)
+        
+        do {
+            try fileManager.moveItem(atPath: item.path, toPath: newPath)
+            listFiles()
+            return true
+        } catch {
+            lastError = "移动失败：\(error.localizedDescription)"
+            return false
+        }
+    }
+    
     // MARK: - 创建示例文件
     
     public func createSampleProject() {
@@ -190,6 +221,9 @@ public struct FileItem: Identifiable, Equatable {
 public struct FileBrowserView: View {
     @StateObject private var fs = FileSystemService.shared
     @State private var currentPath: String? = nil
+    @State private var renameTarget: FileItem? = nil
+    @State private var newName = ""
+    @State private var showRenameAlert = false
     
     public init() {}
     
@@ -241,6 +275,12 @@ public struct FileBrowserView: View {
                             }
                         }
                         .contextMenu {
+                            Button(action: {
+                                renameTarget = file
+                                showRenameAlert = true
+                            }) {
+                                Label("重命名", systemImage: "pencil")
+                            }
                             Button(role: .destructive, action: {
                                 fs.delete(file)
                             }) {
@@ -252,6 +292,22 @@ public struct FileBrowserView: View {
             }
         }
         .navigationTitle("文件")
+        .alert("重命名", isPresented: $showRenameAlert) {
+            TextField("新名称", text: $newName)
+            Button("确定") {
+                if let target = renameTarget {
+                    _ = fs.rename(target, to: newName)
+                }
+                renameTarget = nil
+                newName = ""
+            }
+            Button("取消", role: .cancel) {
+                renameTarget = nil
+                newName = ""
+            }
+        } message: {
+            Text("输入新的文件名")
+        }
         .onAppear {
             fs.listFiles(at: currentPath)
         }
