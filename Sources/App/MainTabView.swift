@@ -20,12 +20,30 @@ public struct MainTabView: View {
                 }
                 .tag(0)
             
-            FileBrowserView()
-                .tabItem {
-                    Image(systemName: "doc.text")
-                    Text("文件")
+            NavigationView {
+                VStack(spacing: 0) {
+                    NavigationLink(destination: SearchView()) {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                            Text("全局搜索")
+                                .font(.subheadline)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                    }
+                    .buttonStyle(.plain)
+                    
+                    FileBrowserView()
                 }
-                .tag(1)
+            }
+            .tabItem {
+                Image(systemName: "doc.text")
+                Text("文件")
+            }
+            .tag(1)
             
             BuildLogView()
                 .tabItem {
