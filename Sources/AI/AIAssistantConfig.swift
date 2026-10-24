@@ -116,7 +116,7 @@ public final class AIAssistantStore: ObservableObject {
         // 上限 200 条（内存+磁盘保护）
         let trimmed = Array(chatHistory.suffix(200))
         if let data = try? JSONEncoder().encode(trimmed) {
-            try? data.write(to: historyFileURL, options: .atomic)
+            try? data.write(to: historyFileURL, options: Data.WritingOptions.atomic)
         }
     }
     
@@ -312,7 +312,7 @@ struct OpenAIModelInfo: Codable {
 
 // MARK: - 聊天消息模型
 
-public struct ChatMessage: Identifiable, Equatable {
+public struct ChatMessage: Identifiable, Equatable, Codable {
     public let id: UUID
     public let role: String     // user / assistant / system
     public let content: String
