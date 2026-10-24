@@ -127,6 +127,7 @@ public struct AIChatView: View {
         
         inputText = ""
         messages.append(ChatMessage(role: "user", content: text))
+        store.addChatMessage(role: "user", content: text)
         isSending = true
         
         store.sendMessage(text, history: Array(messages.dropLast())) { result in
@@ -135,6 +136,15 @@ public struct AIChatView: View {
                 switch result {
                 case .success(let reply):
                     messages.append(ChatMessage(role: "assistant", content: reply))
+                    store.addChatMessage(role: "assistant", content: reply)
+                    
+                    // AI 生成的代码块自动保存为文件
+                    if reply.contains("```") {
+                        for (i, code) in extractCodeBlocks(from: reply).enumerated() where !code.isEmpty {
+                            let fileName = "ai-code-\(Int(Date().timeIntervalSince1970))-\(i+1).swift"
+                            _ = FileSystemService.shared.writeFile(code, to: FileSystemService.shared.documentsURL.appendingPathComponent(fileName).path)
+                        }
+                    }
                 case .failure(let error):
                     messages.append(ChatMessage(role: "assistant", content: "⚠️ 出错了：\(error.localizedDescription)"))
                 }
